@@ -10,6 +10,7 @@ import { isValidObjectId, Model } from 'mongoose';
 
 import { CreatePokemonDto, UpdatePokemonDto } from './dto';
 import { Pokemon } from './entities/pokemon.entity';
+import { PaginationDto } from 'src/common/dto';
 
 @Injectable()
 export class PokemonService {
@@ -18,16 +19,15 @@ export class PokemonService {
   ) {}
 
   private handleExceptions(error: any) {
+    let message: string;
+
     if (error.code === 11000) {
-      throw new BadRequestException(
-        `El pokemon ${JSON.stringify(error.keyValue)} existe en nuestra base de datos.`,
-      );
+      message = `El pokemon ${JSON.stringify(error.keyValue)} existe en nuestra base de datos.`;
+      throw new BadRequestException(message);
     }
 
-    console.log(error);
-    throw new InternalServerErrorException(
-      'No se pudo actualizar el pokemon - Checkea el log del servidor.',
-    );
+    message = 'No se pudo actualizar el pokemon - Checkea el log del servidor.';
+    throw new InternalServerErrorException(message);
   }
 
   async create(createPokemonDto: CreatePokemonDto) {
@@ -42,8 +42,16 @@ export class PokemonService {
     }
   }
 
-  findAll() {
-    return `This action returns all pokemon`;
+  findAll(paginationDto: PaginationDto) {
+    const { limit = Number(process.env.DEFAULT_LIMIT), offset = 0 } =
+      paginationDto;
+
+    return this.pokemonModel
+      .find()
+      .limit(limit)
+      .skip(offset)
+      .sort({ no: 1 })
+      .select('-__v');
   }
 
   async findOne(term: string) {
@@ -65,9 +73,8 @@ export class PokemonService {
 
     if (pokemon) return pokemon;
 
-    throw new NotFoundException(
-      `El pokemon con el id, nombre o número ${term} no existe.`,
-    );
+    const message: string = `El pokemon con el id, nombre o número ${term} no existe.`;
+    throw new NotFoundException(message);
   }
 
   async update(term: string, updatePokemonDto: UpdatePokemonDto) {
@@ -90,9 +97,9 @@ export class PokemonService {
     const { deletedCount } = await this.pokemonModel.deleteOne({ _id: id });
 
     if (deletedCount === 0) {
-      throw new BadRequestException(
-        `El pokemon con el id ${id} no se encontró.`,
-      );
+      const message: string = `El pokemon con el id ${id} no se encontró.`;
+
+      throw new BadRequestException(message);
     }
   }
 }

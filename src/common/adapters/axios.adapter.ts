@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 
 import axios, { AxiosInstance } from 'axios';
 
-import { HttpAdapter } from '../interfaces/http-adapter.interface';
+import { HttpAdapter } from '../interfaces';
 
 @Injectable()
 export class AxiosAdapter implements HttpAdapter {
